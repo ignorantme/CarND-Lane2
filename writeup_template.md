@@ -1,6 +1,3 @@
-## Writeup Template
-
-### You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
 
 ---
 
@@ -19,12 +16,12 @@ The goals / steps of this project are the following:
 
 [//]: # (Image References)
 
-[image1]: ./examples/undistort_output.png "Undistorted"
-[image2]: ./test_images/test1.jpg "Road Transformed"
-[image3]: ./examples/binary_combo_example.jpg "Binary Example"
-[image4]: ./examples/warped_straight_lines.jpg "Warp Example"
-[image5]: ./examples/color_fit_lines.jpg "Fit Visual"
-[image6]: ./examples/example_output.jpg "Output"
+[image1]: ./output_images/undistorted.png "Undistorted"
+[image2]: ./output_images/undistorted2.png "Undistorted2"
+[image3]: ./output_images/combined_binary.png "Binary Example"
+[image4]: ./output_images/warped.png "Warp Example"
+[image5]: ./output_images/window.png "Fit Visual"
+[image6]: ./output_images/project_back.png "Output"
 [video1]: ./project_video.mp4 "Video"
 
 ## [Rubric](https://review.udacity.com/#!/rubrics/571/view) Points
@@ -33,90 +30,92 @@ The goals / steps of this project are the following:
 
 ---
 
-### Writeup / README
+### Writeup
 
-#### 1. Provide a Writeup / README that includes all the rubric points and how you addressed each one.  You can submit your writeup as markdown or pdf.  [Here](https://github.com/udacity/CarND-Advanced-Lane-Lines/blob/master/writeup_template.md) is a template writeup for this project you can use as a guide and a starting point.  
+#### Provide a Writeup / README that includes all the rubric points and how you addressed each one.
 
-You're reading it!
+### 1. Camera Calibration
 
-### Camera Calibration
+#### Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
 
-#### 1. Briefly state how you computed the camera matrix and distortion coefficients. Provide an example of a distortion corrected calibration image.
-
-The code for this step is contained in the first code cell of the IPython notebook located in "./examples/example.ipynb" (or in lines # through # of the file called `some_file.py`).  
+The code for this step is contained in the second code cell of the IPython notebook located in "./porject.ipynb".
 
 I start by preparing "object points", which will be the (x, y, z) coordinates of the chessboard corners in the world. Here I am assuming the chessboard is fixed on the (x, y) plane at z=0, such that the object points are the same for each calibration image.  Thus, `objp` is just a replicated array of coordinates, and `objpoints` will be appended with a copy of it every time I successfully detect all chessboard corners in a test image.  `imgpoints` will be appended with the (x, y) pixel position of each of the corners in the image plane with each successful chessboard detection.  
 
-I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained this result: 
+I then used the output `objpoints` and `imgpoints` to compute the camera calibration and distortion coefficients using the `cv2.calibrateCamera()` function.  I applied this distortion correction to the test image using the `cv2.undistort()` function and obtained the unditorted image on the right side, the left side is the original image: 
 
-![alt text][image1]
+![image1]
 
-### Pipeline (single images)
+### 2.Pipeline (single images)
 
-#### 1. Provide an example of a distortion-corrected image.
+#### 2.1. Provide an example of a distortion-corrected image.
 
-To demonstrate this step, I will describe how I apply the distortion correction to one of the test images like this one:
+Use the parameters calculated from the last step, I apply cv2.undstort() funciton on a test image, and get the following result:
+
 ![alt text][image2]
 
-#### 2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
+#### 2.2. Describe how (and identify where in your code) you used color transforms, gradients or other methods to create a thresholded binary image.  Provide an example of a binary image result.
 
-I used a combination of color and gradient thresholds to generate a binary image (thresholding steps at lines # through # in `another_file.py`).  Here's an example of my output for this step.  (note: this is not actually from one of the test images)
+On this step, I tested many methods to binarize an image: simple threshold on grayscale image, R,G,B channel threshold, H,L,S channel threshold, gradient threshold and so on.  
+The 'gradient_channel_combined()'function combines the gradient in x direction and S channel thresholds, it gives a prety good result at lane lines detection.
+
+Here's an example of my output for this step. The stacked image shows gradient result as green and S channel result as blue.
 
 ![alt text][image3]
 
-#### 3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
+#### 2.3. Describe how (and identify where in your code) you performed a perspective transform and provide an example of a transformed image.
 
-The code for my perspective transform includes a function called `warper()`, which appears in lines 1 through 8 in the file `example.py` (output_images/examples/example.py) (or, for example, in the 3rd code cell of the IPython notebook).  The `warper()` function takes as inputs an image (`img`), as well as source (`src`) and destination (`dst`) points.  I chose the hardcode the source and destination points in the following manner:
+The code for my perspective transform includes a function called `warper()`, which appears in the first cell of 2.3 View transform. 
+The `warper()` function takes an image (`img`) as input, as well as source (`src`) and destination (`dst`) points.  I chose the source and destination points as the following:
 
-```python
-src = np.float32(
-    [[(img_size[0] / 2) - 55, img_size[1] / 2 + 100],
-    [((img_size[0] / 6) - 10), img_size[1]],
-    [(img_size[0] * 5 / 6) + 60, img_size[1]],
-    [(img_size[0] / 2 + 55), img_size[1] / 2 + 100]])
-dst = np.float32(
-    [[(img_size[0] / 4), 0],
-    [(img_size[0] / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), img_size[1]],
-    [(img_size[0] * 3 / 4), 0]])
-```
-
-This resulted in the following source and destination points:
 
 | Source        | Destination   | 
 |:-------------:|:-------------:| 
-| 585, 460      | 320, 0        | 
-| 203, 720      | 320, 720      |
-| 1127, 720     | 960, 720      |
-| 695, 460      | 960, 0        |
+| 563, 470      | 300, 100      | 
+| 720, 470      | 1000, 100     |
+| 1120, 720     | 1000, 720     |
+| 190, 720      | 300, 720      |
 
-I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image and its warped counterpart to verify that the lines appear parallel in the warped image.
+I verified that my perspective transform was working as expected by drawing the `src` and `dst` points onto a test image, after some adjustment, the lines appear parallel in the warped image.
 
 ![alt text][image4]
 
-#### 4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
+#### 2.4. Describe how (and identify where in your code) you identified lane-line pixels and fit their positions with a polynomial?
 
-Then I did some other stuff and fit my lane lines with a 2nd order polynomial kinda like this:
+Then the next step is detecting the lane lines and fit them with second order polynomials. The 'find_lane_points()' function is designed to do this job. It takes the binirized and warped image as input. Uses the histogram of the bottom half of the image. Finds the two peaks on left and right side as the starting point for the two lines. Then uses sliding windiow to search for non-zero pixels. Based on the detected non-zero pixels, fits two second order polynomials to represent the two lines.
 
 ![alt text][image5]
 
-#### 5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
+#### 2.5. Describe how (and identify where in your code) you calculated the radius of curvature of the lane and the position of the vehicle with respect to center.
 
-I did this in lines # through # in my code in `my_other_file.py`
+To calculate the radius of curvature on the bottom of the image, the equation is R = ((1+(2Ay+B)^2)^(3/2))/∣2A∣. The code is:
+``` python
+y_eval = np.max(ploty)
+left_curverad = ((1 + (2*left_fit[0]*y_eval + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
+right_curverad = ((1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
+```
 
-#### 6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+Assume the lane width is 3.7 meter, the vehicle is in the center of of the image. The x-value of the last points of each polynomial is the lane-lines position. We can compare the middle of the lane area with the position of the vehicle to calculate the desired result.
 
-I implemented this step in lines # through # in my code in `yet_another_file.py` in the function `map_lane()`.  Here is an example of my result on a test image:
+#### 2.6. Provide an example image of your result plotted back down onto the road such that the lane area is identified clearly.
+
+I implemented this step in the function 'draw_lane()', it fills the lane area with green color on the warped image, transforms the view back, and then combines it with the original image. 
+
+Here is an example of my result on a test image:
 
 ![alt text][image6]
+Fot this image:
+Left curve: 2478.20 m Right curve: 2304.90 m
+Position : 0.05 m left of center
 
----
 
-### Pipeline (video)
+### 3. Process video
 
 #### 1. Provide a link to your final video output.  Your pipeline should perform reasonably well on the entire project video (wobbly lines are ok but no catastrophic failures that would cause the car to drive off the road!).
 
-Here's a [link to my video result](./project_video.mp4)
+The 'process_video()' function process the first frame of a video, and the 'next_frame()' function process the rest frames. The 'process_video()' function use the same step as described before on single image. The 'next_frame()' function search for non-zero pixels within a range based on the polynomials of the last frame. 'put_text()' function add radius of curvature and vehicle position information onto the video frames.
+
+Here's a [link to my video result](./project_video_output.mp4)
 
 ---
 
@@ -124,4 +123,5 @@ Here's a [link to my video result](./project_video.mp4)
 
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
-Here I'll talk about the approach I took, what techniques I used, what worked and why, where the pipeline might fail and how I might improve it if I were going to pursue this project further.  
+I think the core of this lane detection process is to binarize the warped image. Fit the lines is just a easy step based on the binarized images. As can be seen, I tried many methods and combinitions of them, none is rubust throughout the whole video. The final choice still get a slight problem at 24th and 42th second. The lane-lines on warped images are almost in the vertical direction all the time, sobel calculator on x direction should have good results, the yellow lins are clearly separated with the background on S channel. The combinition of these two method works better than other methods I tried, but when applied it on the challenge video, it became a mess. There must be better solutions to create robust binary images, however testing different parameters and methods and their combinitions took too much time. If I happen to work in this area in the future, I'll make further test.
+
