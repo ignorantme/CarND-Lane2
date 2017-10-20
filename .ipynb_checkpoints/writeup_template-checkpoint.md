@@ -91,8 +91,8 @@ Then the next step is detecting the lane lines and fit them with second order po
 To calculate the radius of curvature on the bottom of the image, the equation is R = ((1+(2Ay+B)^2)^(3/2))/∣2A∣. The code is:
 ``` python
 y_eval = np.max(ploty)
-left_curverad = ((1 + (2*left_fit[0]*y_eval + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
-right_curverad = ((1 + (2*right_fit[0]*y_eval + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
+left_curverad = ((1 + (2*left_fit[0]*y_eval*ym_per_pix + left_fit[1])**2)**1.5) / np.absolute(2*left_fit[0])
+right_curverad = ((1 + (2*right_fit[0]*y_eval*ym_per_pix + right_fit[1])**2)**1.5) / np.absolute(2*right_fit[0])
 ```
 
 Assume the lane width is 3.7 meter, the vehicle is in the center of of the image. The x-value of the last points of each polynomial is the lane-lines position. We can compare the middle of the lane area with the position of the vehicle to calculate the desired result.
@@ -124,4 +124,7 @@ Here's a [link to my video result](./project_video_output.mp4)
 #### 1. Briefly discuss any problems / issues you faced in your implementation of this project.  Where will your pipeline likely fail?  What could you do to make it more robust?
 
 I think the core of this lane detection process is to binarize the warped image. Fit the lines is just a easy step based on the binarized images. As can be seen, I tried many methods and combinitions of them, none is rubust throughout the whole video. The final choice still get a slight problem at 24th and 42th second. The lane-lines on warped images are almost in the vertical direction all the time, sobel calculator on x direction should have good results, the yellow lins are clearly separated with the background on S channel. The combinition of these two method works better than other methods I tried, but when applied it on the challenge video, it became a mess. There must be better solutions to create robust binary images, however testing different parameters and methods and their combinitions took too much time. If I happen to work in this area in the future, I'll make further test.
+
+---
+update: use hsv thresholds as seggested, the binarization result is much better.
 
